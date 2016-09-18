@@ -13,33 +13,25 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class NGram {
 
-  public static class TokenizerMapper
+  public static class NgramMapper
        extends Mapper<Object, Text, Text, IntWritable>{
 
     private final static IntWritable one = new IntWritable(1);
-//    private Text word = new Text();
     private Text Ngram = new Text();
 
     public void map(Object key, Text value, Context context
                     ) throws IOException, InterruptedException {
       
       Configuration conf = context.getConfiguration();
-      String param = conf.get("numResults");
-      int n = Integer.parseInt(conf.get("numResults"));
+      int nval = Integer.parseInt(conf.get("numResults"));
 
-      //StringTokenizer itr = new StringTokenizer(value.toString());
-      //while (itr.hasMoreTokens()) {
-        //word.set(itr.nextToken().toString());
-        //word.set(Integer.toString(itr.nextToken().length()));   //Counts the word_length
-        //context.write(word, one);
-      //}
-      String s = value.toString();
-      String[] parts = s.split(" ");
-      for(int i = 0; i < parts.length - n + 1; i++){
+      String valueStr = value.toString();
+      String[] parts = valueStr.split(" ");
+      for(int i = 0; i < parts.length - nval + 1; i++){
         StringBuilder sb = new StringBuilder();
-        for(int k = 0; k < n; k++){
-            if(k > 0) sb.append(' ');
-            sb.append(parts[i+k]);
+        for(int j = 0; j < nval; j++){
+            if(j > 0) sb.append(' ');
+            sb.append(parts[i+j]);
         }
         Ngram.set(sb.toString());
         context.write(Ngram, one);
@@ -70,8 +62,8 @@ public class NGram {
 
     Job job = Job.getInstance(conf, "word count");
     job.setJarByClass(NGram.class);
-    job.setMapperClass(TokenizerMapper.class);
-    job.setCombinerClass(IntSumReducer.class);  //Introduce a combiner to the word count program
+    job.setMapperClass(NgramMapper.class);
+    job.setCombinerClass(IntSumReducer.class);
     job.setReducerClass(IntSumReducer.class);
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(IntWritable.class);
