@@ -55,9 +55,9 @@ public class MaxWordCount {
     public void map(Object key, Text value, Context context
                     ) throws IOException, InterruptedException {
       // Complete your 2nd mapper
-        Scanner san = new Scanner(value.toString());
-        while (san.hasNextLine()) {
-          word_freq.set(san.nextLine());
+        Scanner scan = new Scanner(value.toString());
+        while (scan.hasNextLine()) {
+          word_freq.set(scan.nextLine());
           context.write(k, word_freq);
         }
     }
@@ -72,18 +72,17 @@ public class MaxWordCount {
                        Context context
                        ) throws IOException, InterruptedException {
       // Complete your 2nd reducer
-        int maxVal = -1;
-        Text test = new Text();
+        int max_freq = -1;
         for (Text val : values) {
-            String valStr = val.toString();
-            String[] tokens = valStr.split("\\t");
-            if(Integer.parseInt(tokens[1]) > maxVal){
-                System.out.println(Integer.parseInt(tokens[1])+"\n");
-                test.set(valStr);
-                maxVal = Integer.parseInt(tokens[1]);
+            Scanner scan = new Scanner(val.toString());
+            String word = scan.next();
+            int freq = scan.nextInt();
+            if(freq > max_freq){
+                max_word = word + "\t" + freq;
+                max_freq = freq;
             }
         }
-        result.set(test);
+        result.set(max_word);
         context.write(key, result);
     }
   }
