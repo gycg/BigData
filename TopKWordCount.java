@@ -66,18 +66,11 @@ public class TopKWordCount {
 
     private Text word_freq = new Text();
     private Text k = new Text("-");
-    //Map<String, Integer> map = new TreeMap<String, Integer>();
-    //SortedSet<Map.Entry<String, Integer>> mapSorted = new TreeSet<Map.Entry<String, Integer>>();
 
     public void map(Object key, Text value, Context context
                     ) throws IOException, InterruptedException {
         
         Scanner san = new Scanner(value.toString());
-        //while(san.hasNext()) {
-        //    map.put(san.next(), san.nextInt());
-        //}
-        //mapSorted = entriesSortedByValues(map);
-        //System.out.println(mapSorted);
         while (san.hasNextLine()) {
           word_freq.set(san.nextLine());
           context.write(k, word_freq);
@@ -86,10 +79,10 @@ public class TopKWordCount {
   }
 
   // Create your 2nd reducer here
-  public static class IntMaxReducer
+  public static class TopKMaxReducer
        extends Reducer<Text,Text,Text,Text> {
     private Text result = new Text();
-    private String max_word;
+    private String topk_word;
     Map<String, Integer> map = new TreeMap<String, Integer>();
     SortedSet<Map.Entry<String, Integer>> mapSorted = new TreeSet<Map.Entry<String, Integer>>();
     int count = 0;
@@ -97,34 +90,24 @@ public class TopKWordCount {
     public void reduce(Text key, Iterable<Text> values,
                        Context context
                        ) throws IOException, InterruptedException {
-        
         Configuration conf = context.getConfiguration();
-        String param = conf.get("numResults");
+        int kval = Integer.parseInt(conf.get("numResults"));
+        
         for(Text val: values) {
             Scanner san = new Scanner(val.toString());
             map.put(san.next(), san.nextInt());
         }
         mapSorted = entriesSortedByValues(map);
         for (Map.Entry<String,Integer> element: mapSorted){
-              String key1 = element.getKey();
-              String value1 = Integer.toString(element.getValue());
-            if(count<Integer.parseInt(param)){
-                System.out.println(element);
-                result.set(key1+"\t"+value1);
+            String word = element.getKey();
+            String freq = Integer.toString(element.getValue());
+            if(count < kval){
+                topk_word = word + "\t" + freq;
+                result.set(topk_word);
                 context.write(key, result);
-                count += 1;   
+                count += 1;
             }
         }
-        //Scanner san = new Scanner(values.toString());
-        //System.out.println(values);
-        //while(san.hasNext()) {
-        //    map.put(san.next(), san.nextInt());
-        //}
-        //mapSorted = entriesSortedByValues(map);
-        //System.out.println(map);
-        
-        //result.set(san.next());
-        //context.write(key, result);
     }
   }  
 
@@ -150,8 +133,8 @@ public class TopKWordCount {
     // Insert your Code Here
     job2.setJarByClass(TopKWordCount.class);
     job2.setMapperClass(IdMapper.class);
-    //job2.setCombinerClass(IntMaxReducer.class);
-    job2.setReducerClass(IntMaxReducer.class);
+    job2.setCombinerClass(TopKMaxReducer.class);
+    job2.setReducerClass(TopKMaxReducer.class);
     job2.setOutputKeyClass(Text.class);
     job2.setOutputValueClass(Text.class);
 
