@@ -72,13 +72,13 @@ public class MaxWordCount {
                        Context context
                        ) throws IOException, InterruptedException {
       // Complete your 2nd reducer
-        int max_freq = -1;
+        int max_freq = Integer.MIN_VALUE;
         for (Text val : values) {
             Scanner scan = new Scanner(val.toString());
             String word = scan.next();
             int freq = scan.nextInt();
             if(freq > max_freq){
-                max_word = word + "\t" + freq;
+                max_word = val.toString();//word + "\t" + freq;
                 max_freq = freq;
             }
         }
